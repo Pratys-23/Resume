@@ -80,17 +80,31 @@ document.addEventListener('DOMContentLoaded', function() {
         this.reset();
     });
 
-    // Add animation on scroll
+    // Add animation on scroll with enhanced effects
     const animateOnScroll = function() {
         const elements = document.querySelectorAll('.timeline-item, .education-card, .project-card, .skill-category');
         
-        elements.forEach(element => {
+        elements.forEach((element, index) => {
             const elementTop = element.getBoundingClientRect().top;
             const elementBottom = element.getBoundingClientRect().bottom;
             
             if (elementTop < window.innerHeight && elementBottom > 0) {
-                element.style.opacity = '1';
-                element.style.transform = 'translateY(0)';
+                if (!element.classList.contains('animated')) {
+                    element.classList.add('animated');
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                    
+                    // Add staggered animation for skill tags
+                    if (element.classList.contains('skill-category')) {
+                        const skillTags = element.querySelectorAll('.skill-tag');
+                        skillTags.forEach((tag, tagIndex) => {
+                            setTimeout(() => {
+                                tag.style.opacity = '1';
+                                tag.style.transform = 'translateY(0)';
+                            }, tagIndex * 50);
+                        });
+                    }
+                }
             }
         });
     };
@@ -101,9 +115,19 @@ document.addEventListener('DOMContentLoaded', function() {
         element.style.opacity = '0';
         element.style.transform = 'translateY(30px)';
         element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        
+        // Set initial state for skill tags
+        if (element.classList.contains('skill-category')) {
+            const skillTags = element.querySelectorAll('.skill-tag');
+            skillTags.forEach(tag => {
+                tag.style.opacity = '0';
+                tag.style.transform = 'translateY(20px)';
+                tag.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            });
+        }
     });
 
-    window.addEventListener('scroll', animateOnScroll);
+    window.addEventListener('scroll', debounce(animateOnScroll, 50));
     animateOnScroll(); // Run once on load
 
     // Typing effect for hero name
@@ -189,6 +213,102 @@ document.addEventListener('DOMContentLoaded', function() {
         
         body.dark-theme .nav-link.active {
             color: var(--primary-color);
+        }
+        
+        /* Enhanced animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .slide-in-left {
+            animation: slideInLeft 0.6s ease-out;
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.6s ease-out;
+        }
+        
+        /* Enhanced hover effects */
+        .skill-tag {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .skill-tag:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        
+        .project-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .project-card:hover {
+            transform: translateY(-10px) rotateX(2deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Loading animation */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loader-content {
+            text-align: center;
+            color: white;
+        }
+        
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     `;
 
@@ -346,12 +466,41 @@ window.addEventListener('scroll', debounce(function() {
 
 // Add loading animation
 window.addEventListener('load', function() {
-    document.body.style.opacity = '0';
-    document.body.style.transition = 'opacity 0.5s ease';
+    // Create loader
+    const loader = document.createElement('div');
+    loader.className = 'loader';
+    loader.innerHTML = `
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <h2>Loading Resume...</h2>
+        </div>
+    `;
+    document.body.appendChild(loader);
     
+    // Hide loader after content loads
     setTimeout(() => {
-        document.body.style.opacity = '1';
-    }, 100);
+        loader.classList.add('hidden');
+        setTimeout(() => {
+            document.body.removeChild(loader);
+        }, 500);
+    }, 1500);
+    
+    // Add floating animation to profile image
+    const profileImg = document.querySelector('.profile-img');
+    if (profileImg) {
+        profileImg.classList.add('floating');
+    }
+    
+    // Add pulse animation to hero buttons
+    const heroButtons = document.querySelectorAll('.btn');
+    heroButtons.forEach((btn, index) => {
+        setTimeout(() => {
+            btn.classList.add('pulse');
+            setTimeout(() => {
+                btn.classList.remove('pulse');
+            }, 2000);
+        }, index * 200);
+    });
 });
 
 // Analytics tracking (placeholder)
